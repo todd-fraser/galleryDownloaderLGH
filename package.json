@@ -1,0 +1,20 @@
+{
+  "name": "gallerydownloader-gh",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Todd Fraser",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "dist-exiftool": "^10.53.0",
+    "fs-extra": "^9.0.1",
+    "node-downloader-helper": "^1.0.13",
+    "node-exiftool": "^2.3.0",
+    "request": "^2.88.2",
+    "zip-local": "^0.3.4"
+  }
+}
