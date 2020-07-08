@@ -8,10 +8,16 @@ const exiftool = require("node-exiftool");
 const exiftoolBin = require("dist-exiftool");
 const ep = new exiftool.ExiftoolProcess(exiftoolBin);
 
-const pullGalleryLGH = function pullGallery(URL, callback){
+require('events').EventEmitter.defaultMaxListeners = 15;
+
+let captionArray = [];
+let fileArray = [];
+
+const pullGalleryLGH = function pullGallery(URL, callbackID){
     request(URL, (error, response, html) => {
         if(!error && response.statusCode == 200) {
-            ep.open();  // launch instance of exif tool
+            captionArray = [];
+            fileArray = [];
             const $ = cheerio.load(html);
             let str = $("script:not([src])")[1].children[0].data; //get second script tag contents
             let data = str.split("__gh__coreData.content=")[1]; //split the script at story data var delcaration
@@ -25,113 +31,139 @@ const pullGalleryLGH = function pullGallery(URL, callback){
   
             let downloadPath = `./public/downloads/${gallery.type}_${gallery.id}`;  
             galleryID = gallery.id;
-            callback(gallery.id);
+            callbackID(gallery.id);
             // let downloadsComplete = false;
   
   
-            createDownloadDir(downloadPath, 0744, function(err) {
+
+            fs.mkdir(downloadPath, 0774, function(err) {
                 if (err) {
-                    console.log("Folder creation error");
-                    console.log(err);
-                } // handle folder creation error
-                else {
-                    console.log("gallery folder exists");
-                } // we're all good
+                    if (err.code == "EEXIST") {
+                        console.log("folder already existed");
+                        gallery.items.forEach(element => {
+                            captionArray.push(element.caption);
+                            fileArray.push(`${element.count}.jpg`);
+                            downloadFile(element.link.split("&")[0], downloadPath, element.count);
+                        });
+                    } else {
+                        console.log(err);
+                    }
+                } else {
+                    console.log("successfully created folder");
+                    gallery.items.forEach(element => {
+                        captionArray.push(element.caption);
+                        fileArray.push(`${element.count}.jpg`);
+                        // console.log(captionArray);
+                        downloadFile(element.link.split("&")[0], downloadPath, element.count);
+                    });
+                }
             });
-  
+            
+
+
+
             successfullyDownloaded = 0;
             totalItems = gallery.items.length;
   
-            gallery.items.forEach(element => {
-                // console.log(element.link.split("&")[0]); //splits off cropping or other params
-                // console.log(element.count);
-                downloadFile(element.link.split("&")[0], downloadPath, element.caption, element.count);
-                // console.log(`caption: ${element.caption}`);
-                // console.log(`link: ${element.link}`);
-            });
-            ep.on(exiftool.events.EXIT, () => {
-                console.log(`EXIF exit event:`);
-                zipper.zip(`./public/downloads/gallery_${gallery.id}`, function(error, zipped) {
-                    if (!error) {
-                        console.log(`starting zip of ${gallery.id}`);
-                      zipped.compress(); // compress before exporting
-                      zipped.save(`./public/downloads/${gallery.id}.zip`, function(error) {  // save the zipped file to disk
-                        console.log(`saving zip ${gallery.id}`);
-                        if (!error) {
-                          console.log("zipped successfully!");
-                        } else {
-                          console.log("some kind of zip error");
-                          console.log(error);
-                        }
-                      });
-                    } else {
-                        console.log(error);
-                    }
-                  });
-            });
+
+            // ep.on(exiftool.events.EXIT, () => {
+            //     console.log(`EXIF exit event:`);
+            //     zipper.zip(`./public/downloads/gallery_${gallery.id}`, function(error, zipped) {
+            //         if (!error) {
+            //             console.log(`starting zip of ${gallery.id}`);
+            //           zipped.compress(); // compress before exporting
+            //           zipped.save(`./public/downloads/${gallery.id}.zip`, function(error) {  // save the zipped file to disk
+            //             console.log(`saving zip ${gallery.id}`);
+            //             if (!error) {
+            //               console.log("zipped successfully!");
+            //             } else {
+            //               console.log("some kind of zip error");
+            //               console.log(error);
+            //             }
+            //           });
+            //         } else {
+            //             console.log(error);
+            //         }
+            //       });
+            // });
         }
     });
   };
 
 
-
-
-  function createDownloadDir(path, mask, cb) {
-    if (typeof mask == "function") {
-        // allow the `mask` parameter to be optional
-        cb = mask;
-        mask = 0777;
-    }
-    fs.mkdir(path, mask, function(err) {
-        if (err) {
-        if (err.code == "EEXIST") cb(null);
-        // ignore the error if the folder already exists
-        else cb(err); // something else went wrong
-        } else cb(null); // successfully created folder
-    });
-
-}
-
-
-
-function downloadFile(downloadURL, dir, caption, count) {
+function downloadFile(downloadURL, dir, count) {
     const dl = new DownloaderHelper(downloadURL, dir, {
-      fileName: fileName => count + "_" + fileName,
+      fileName: fileName => count + ".jpg",
       override: true
     });
     dl.start();
-  
-    return new Promise((resolve, reject) => {
-      dl.on("end", downloadInfo => {
+    dl.on("end", downloadInfo => {
         console.log("Download Completed: ", downloadInfo.fileName);
-  
-        const metadata = {
-        //   Creator: author,
-          "Caption-Abstract": caption
+        // fileArray.push(`${dir}/${downloadInfo.fileName}`);
+        successfullyDownloaded ++;
+        console.log(`successfully downloaded: ${successfullyDownloaded} so far`)
+        if(successfullyDownloaded == totalItems) {
+            console.log('All downloaded, starting EXIF writing');
+            writeAllExif();
         };
-  
-        const file = `${dir}/${downloadInfo.fileName}`;
-
-        ep.writeMetadata(file, metadata, ['codedcharacterset=utf8','overwrite_original'])    //   use codedcharacterset
-            // .then(console.log, console.error)
-            .then(successfullyDownloaded ++, console.log(successfullyDownloaded))
-            .catch(console.error);
-
-            if(successfullyDownloaded == totalItems) {
-                ep.close();
-                console.log('Closing EXIF tool')
-            };
-
-        resolve();
-      });
-  
-      dl.on("err", err => {
+    });
+    dl.on("err", err => {
         console.log("Download Failed");
         reject(err);
-      });
-
     });
-  }  
+}     
+
+function writeAllExif() {
+    ep
+    .open()
+    // read and write metadata operations
+    .then(() => {
+        console.log(captionArray);
+        console.log(`File Array: ${fileArray}`);
+        captionArray.forEach((element, index) => {
+            console.log(fileArray[index]);
+            console.log(element);
+            ep.writeMetadata(`public/downloads/gallery_708009994/${fileArray[index]}`, { "Caption-Abstract": element }, ['codedcharacterset=utf8','overwrite_original'])
+        // ep.writeMetadata("public/downloads/gallery_708009994/1_PH-708009994.jpg", { "Caption-Abstract": "demo caption" }, ['codedcharacterset=utf8','overwrite_original'])
+        })
+    })    
+    .then(console.log, console.error)
+    .then(() => ep.close())
+    .then(() => console.log('Closed exiftool'))
+    .catch(console.error)
+};
+
+//     return new Promise((resolve, reject) => {
+//       dl.on("end", downloadInfo => {
+//         console.log("Download Completed: ", downloadInfo.fileName);
+  
+//         const metadata = {
+//         //   Creator: author,
+//           "Caption-Abstract": caption
+//         };
+  
+//         const file = `${dir}/${downloadInfo.fileName}`;
+
+//         ep.writeMetadata(file, metadata, ['codedcharacterset=utf8','overwrite_original'])    //   use codedcharacterset
+//             // .then(console.log, console.error)
+//             .then(successfullyDownloaded ++, console.log(successfullyDownloaded))
+//             .catch(console.error);
+
+//             if(successfullyDownloaded == totalItems) {
+//                 ep.close();
+//                 console.log('Closing EXIF tool')
+//             };
+
+//         resolve();
+//       });
+  
+//       dl.on("err", err => {
+//         console.log("Download Failed");
+//         reject(err);
+//       });
+
+//     });
+//   }  
 
 
   module.exports = pullGalleryLGH;
