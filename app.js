@@ -1,23 +1,31 @@
-// const request = require('request');
-// const cheerio = require('cheerio');
-// const fs = require("fs-extra");
-// const { DownloaderHelper } = require("node-downloader-helper");
-// const zipper = require("zip-local");
+const express = require("express");
+const app = express();
+const bodyParser = require("body-parser");
 
-// const exiftool = require("node-exiftool");
-// const exiftoolBin = require("dist-exiftool");
-// const ep = new exiftool.ExiftoolProcess(exiftoolBin);
+require('dotenv').config();
 
-const pullGalleryLGH = require('./pullGalleryLGH');
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static("public"));
+app.set("view engine", "ejs");
+
+const pullGalleryLGH = require("./pullGalleryLGH");
 
 let successfullyDownloaded;
 let totalItems;
-let galleryID;
+let galleryID = 0; 
 
-pullGalleryLGH(`https://www.fayobserver.com/photogallery/NC/20180629/NEWS/629009999/PH/1`, (data) => {
-  console.log(`callback fired - Gallery ID = ${data}`);
+app.get("/", function (req, res) {
+  res.render("scrape");
 });
-// pullGalleryLGH(`https://www.fayobserver.com/photogallery/NC/20190620/NEWS/620009998/PH/1`);
 
+app.post("/scrape", function (req, res) {
+  galleryURL = req.body.galleryURL;
+  console.log(`Request for /scrape and gallery URL - ${galleryURL}`);
+  pullGalleryLGH(galleryURL, (data) => {
+    console.log(`callback fired - Gallery ID = ${data}`);
+  });
+});
 
-
+app.listen(process.env.PORT, function() { 
+  console.log('Server listening on port ' + process.env.PORT); 
+});

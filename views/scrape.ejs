@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+    <html>
+        <head>
+            <title>Gallery Scrape Tool</title>
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">   
+            <link rel="stylesheet" href="/css/main.css">
+        </head>
+        <body>
+
+            <div class="container text-center">
+                <div class="jumbotron">
+                    <h1>Gallery Scrape Tool</h1>
+                    <p>Please be patient with me, I live on a free (read: sometimes slow) server!</p>
+                </div>
+            </div>
+
+
+
+<div class="container">
+
+    <form action="/scrape" method="POST" id="form">
+
+        <div class="form-group">
+            <label for="exampleInputEmail1">Legacy GateHouse Gallery Link</label>
+            <input type="text" class="form-control" name="galleryURL" id="linkInput" placeholder="Gallery URL">
+        </div>
+        <div class="form-group">
+            <button class="btn btn-primary">Scape Gallery</button>
+        </div>
+        
+    </form>
+
+  
+    <div class="lds-ring" id="progress">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
+</div>
+
+
+<script type="text/javascript">
+    function linkSubmit(event) {
+        document.getElementById("progress").style.display = "inline-block";
+        // event.preventDefault();
+        // document.getElementById("form").submit();
+        }
+
+    const form = document.getElementById('form');
+    form.addEventListener('submit', linkSubmit);
+</script>
+
+
+</body>
+</html>

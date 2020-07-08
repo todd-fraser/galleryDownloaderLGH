@@ -23,7 +23,7 @@ const pullGalleryLGH = function pullGallery(URL, callback){
                 console.log("--- Data saved to local JSON ---");
               });
   
-            let downloadPath = `./downloads/${gallery.type}_${gallery.id}`;  
+            let downloadPath = `./public/downloads/${gallery.type}_${gallery.id}`;  
             galleryID = gallery.id;
             callback(gallery.id);
             // let downloadsComplete = false;
@@ -50,12 +50,13 @@ const pullGalleryLGH = function pullGallery(URL, callback){
                 // console.log(`link: ${element.link}`);
             });
             ep.on(exiftool.events.EXIT, () => {
-                zipper.zip(`./downloads/gallery_${gallery.id}`, function(error, zipped) {
+                console.log(`EXIF exit event:`);
+                zipper.zip(`./public/downloads/gallery_${gallery.id}`, function(error, zipped) {
                     if (!error) {
-                        console.log("starting zip");
+                        console.log(`starting zip of ${gallery.id}`);
                       zipped.compress(); // compress before exporting
-                      zipped.save(`./downloads/${gallery.id}.zip`, function(error) {  // save the zipped file to disk
-                        console.log("saving zip");
+                      zipped.save(`./public/downloads/${gallery.id}.zip`, function(error) {  // save the zipped file to disk
+                        console.log(`saving zip ${gallery.id}`);
                         if (!error) {
                           console.log("zipped successfully!");
                         } else {
