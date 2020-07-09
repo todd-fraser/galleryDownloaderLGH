@@ -21,8 +21,10 @@ app.get("/", function (req, res) {
 app.post("/scrape", function (req, res) {
   galleryURL = req.body.galleryURL;
   console.log(`Request for /scrape and gallery URL - ${galleryURL}`);
-  pullGalleryLGH(galleryURL, (data) => {
-    console.log(`callback fired - Gallery ID = ${data}`);
+  pullGalleryLGH(galleryURL, (gallery) => {
+    console.log(`callback fired - Gallery ID = ${gallery.id}`);
+    console.log(`callback fired - Gallery Title = ${gallery.title}`);
+    res.render("download",{gallery:gallery});
   });
 });
 
