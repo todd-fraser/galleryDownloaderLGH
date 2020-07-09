@@ -29,7 +29,15 @@
         <div class="form-group">
             <button class="btn btn-primary">Scape Gallery</button>
         </div>
-        
+        <br><br>
+    </form>
+        <div class="form-group">
+            <label>Looking for Today's History Gallery?</label>
+            <button class="button btn btn-primary" onClick="window.open(galleryLink);return false">Open Today's Gallery</button>
+            <label>and copy the URL.</label>
+        </div>
+    <form>
+
     </form>
 
 
@@ -46,6 +54,14 @@
 
     const form = document.getElementById('form');
     form.addEventListener('submit', linkSubmit);
+</script>
+
+<script>
+    const today = new Date()
+    let month = today.toLocaleString('default', { month: 'long' })
+    let date = today.getDate();
+
+    let galleryLink = `https://duckduckgo.com/?q=\\today+in+history+${month}+${date}+fayobserver.com&kp=-1&kl=us-en`;
 </script>
 
 
