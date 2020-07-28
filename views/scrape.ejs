@@ -38,9 +38,11 @@
     <% let date = today.getDate(); %>
 
         <div class="form-group">
-            <label>Looking for Today's History Gallery?</label>
-            <button class="button btn btn-primary" onClick="window.open(galleryLink);return false">Open <%= month %> <%= date %> Gallery</button>
-            <label>and copy the URL.</label>
+            <label>Looking for Today's History Gallery?  Click below, it's usually the first result.  Copy the URL and paste it back here.</label>
+            <p>
+                <button class="button btn btn-primary" onClick="window.open(galleryLink);return false">Search Google for <%= month %> <%= date %> Gallery</button>
+            </p>
+            <p>
         </div>
     <form>
 
@@ -66,7 +68,8 @@
     const today = new Date()
     let month = today.toLocaleString('default', { month: 'long' })
     let date = today.getDate();
-    let galleryLink = `https://duckduckgo.com/?q=\\today+in+history+${month}+${date}+fayobserver.com&kp=-1&kl=us-en`;
+    // let galleryLink = `https://duckduckgo.com/?q=\\today+in+history+${month}+${date}+fayobserver.com&kp=-1&kl=us-en`;
+    let galleryLink = `http://www.google.com/search?q=today+in+history+${month}+${date}+fayobserver.com`;
 </script>
 
 

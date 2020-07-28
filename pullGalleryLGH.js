@@ -26,6 +26,7 @@ const pullGalleryLGH = function pullGallery(URL, callback) {
       data = data.split(";\n")[0]; //split off additional variables from script
       let gallery = JSON.parse(data); //put all data into gallery object
 
+      // DEV JSON dump to file, turn back on to diagnose non-compliant JSON
       // fs.writeFile(`./scaped_JSON/gallery.json`, data, (err) => {  //write JSON to file, for dev purposes
       //     if (err) throw err;
       //     console.log("--- Data saved to local JSON ---");
